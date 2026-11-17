@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#17212b">
+<title>Kalkulator Bisnis Pinjaman</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#17212b;background:#f3f5f7}
+*{box-sizing:border-box}body{margin:0;padding:18px 14px 32px}
+main{max-width:520px;margin:auto}.top{padding:18px 4px 14px}
+h1{font-size:24px;margin:0 0 6px}.sub{color:#65717d;font-size:13px}
+.panel{background:#fff;border:1px solid #e1e6eb;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 3px 12px #15202b0a}
+.tabs{display:flex;background:#edf1f4;border-radius:12px;padding:4px;gap:4px}
+.tabs button{flex:1;border:0;border-radius:9px;padding:11px 7px;background:transparent;font-weight:650;color:#5d6872}
+.tabs button.active{background:#fff;color:#17212b;box-shadow:0 1px 4px #00000012}
+label{display:block;font-size:13px;font-weight:650;margin:14px 0 6px}
+input,select{width:100%;padding:13px 12px;border:1px solid #d7dee5;border-radius:10px;font-size:16px;background:#fff;color:#17212b}
+small.hint{display:block;color:#74808b;font-size:12px;margin-top:5px}
+button.primary{width:100%;border:0;background:#17212b;color:white;padding:14px;border-radius:11px;font-size:15px;font-weight:700;margin-top:17px}
+.result{background:#f6f8fa;border-radius:12px;padding:14px;margin-top:14px}
+.mainresult{font-size:29px;font-weight:800;letter-spacing:-.5px;margin:3px 0 12px}
+.rows{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.metric{background:#fff;border:1px solid #e7ebef;border-radius:10px;padding:10px}
+.metric span{display:block;color:#74808b;font-size:11px;margin-bottom:4px}.metric b{font-size:15px}
+.note{font-size:12px;color:#697580;line-height:1.5;margin:12px 2px 0}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<main>
+ <header class="top"><h1>Kalkulator Bisnis Pinjaman</h1><div class="sub">Hitung keuntungan, bunga, dan total pengembalian pinjaman.</div></header>
+ <section class="panel">
+  <div class="tabs">
+   <button id="tabA" class="active" type="button" onclick="switchMode('a')">Analisis pinjaman</button>
+   <button id="tabB" type="button" onclick="switchMode('b')">Tentukan harga</button>
+  </div>
+  <div id="modeA">
+   <label for="principalA">Nominal yang dipinjamkan (Rp)</label>
+   <input id="principalA" inputmode="numeric" placeholder="Contoh: 500000" value="500000">
+   <label for="repayA">Total uang yang harus dikembalikan (Rp)</label>
+   <input id="repayA" inputmode="numeric" placeholder="Contoh: 700000" value="700000">
+   <label for="tenorA">Tenor pinjaman</label>
+   <select id="tenorA"><option value="7">7 hari</option><option value="14">14 hari</option><option value="21" selected>21 hari</option></select>
+   <button class="primary" onclick="analyze()">Hitung pinjaman</button>
+   <div id="resultA" class="result hidden" aria-live="polite"></div>
+  </div>
+  <div id="modeB" class="hidden">
+   <label for="principalB">Nominal yang ingin dipinjamkan (Rp)</label>
+   <input id="principalB" inputmode="numeric" placeholder="Contoh: 500000" value="500000">
+   <label for="rateB">Bunga yang ingin diperoleh (%)</label>
+   <input id="rateB" inputmode="decimal" placeholder="Contoh: 40" value="40">
+   <label for="tenorB">Tenor pinjaman</label>
+   <select id="tenorB"><option value="7">7 hari</option><option value="14">14 hari</option><option value="21" selected>21 hari</option></select>
+   <button class="primary" onclick="price()">Hitung total pengembalian</button>
+   <div id="resultB" class="result hidden" aria-live="polite"></div>
+  </div>
+ </section>
+ <p class="note">Catatan: kalkulator ini memakai bunga satu kali untuk seluruh tenor, bukan bunga harian atau bunga berbunga. Masukkan harga/bunga sesuai kesepakatan dan ketentuan yang berlaku. Hasil adalah perhitungan kotor, belum dikurangi biaya operasional atau kerugian pinjaman macet.</p>
+</main>
+<script>
+const rupiah=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n);
+const num=id=>Number((document.getElementById(id).value||'').replace(/[^\d]/g,''))||0;
+const decimal=id=>Number((document.getElementById(id).value||'').replace(',','.'))||0;
+function switchMode(m){
+ document.getElementById('modeA').classList.toggle('hidden',m!=='a');
+ document.getElementById('modeB').classList.toggle('hidden',m!=='b');
+ document.getElementById('tabA').classList.toggle('active',m==='a');
+ document.getElementById('tabB').classList.toggle('active',m==='b');
+}
+function analyze(){
+ const p=num('principalA'),r=num('repayA'),t=Number(document.getElementById('tenorA').value);
+ const box=document.getElementById('resultA');box.classList.remove('hidden');
+ if(p<=0||r<=0){box.innerHTML='<b>Masukkan nominal yang valid.</b>';return}
+ const profit=r-p,rate=profit/p*100,daily=rate/t;
+ box.innerHTML=`<div class="sub">Keuntungan kotor per pinjaman</div><div class="mainresult">${rupiah(profit)}</div><div class="rows">
+ <div class="metric"><span>Total kembali</span><b>${rupiah(r)}</b></div>
+ <div class="metric"><span>Bunga total</span><b>${rate.toFixed(2).replace('.',',')}%</b></div>
+ <div class="metric"><span>Tenor</span><b>${t} hari</b></div>
+ <div class="metric"><span>Rata-rata bunga/hari*</span><b>${daily.toFixed(2).replace('.',',')}%</b></div>
+ </div>${profit<0?'<p class="note">Perhatian: total pengembalian lebih kecil daripada modal yang dipinjamkan.</p>':''}<p class="note">*Bunga total dibagi tenor secara sederhana; bukan bunga efektif tahunan.</p>`;
+}
+function price(){
+ const p=num('principalB'),rate=decimal('rateB'),t=Number(document.getElementById('tenorB').value);
+ const box=document.getElementById('resultB');box.classList.remove('hidden');
+ if(p<=0||rate<0){box.innerHTML='<b>Masukkan nominal dan persentase yang valid.</b>';return}
+ const profit=p*rate/100,total=p+profit;
+ box.innerHTML=`<div class="sub">Total pengembalian yang dihitung</div><div class="mainresult">${rupiah(total)}</div><div class="rows">
+ <div class="metric"><span>Modal dipinjamkan</span><b>${rupiah(p)}</b></div>
+ <div class="metric"><span>Keuntungan kotor</span><b>${rupiah(profit)}</b></div>
+ <div class="metric"><span>Bunga total</span><b>${rate.toFixed(2).replace('.',',')}%</b></div>
+ <div class="metric"><span>Tenor</span><b>${t} hari</b></div>
+ </div><p class="note">Angka total dapat dibulatkan sesuai kebijakan harga bisnis.</p>`;
+}
+</script>
+</body></html>
